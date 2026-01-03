@@ -18,3 +18,22 @@
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
+
+###> project ###
+# Frontend dependencies (będą w frontend/node_modules)
+/frontend/node_modules/
+/frontend/dist/
+
+# IDE
+.idea/
+.vscode/
+
+# JWT keys (generowane lokalnie, nie commitować!)
+/config/jwt/*.pem
+
+# Agent workflows (lokalne dla AI)
+/.agent/
+
+# Lokalna dokumentacja edukacyjna
+/docs/
+###< project ###
