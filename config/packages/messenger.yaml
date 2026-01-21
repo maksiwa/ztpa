@@ -24,3 +24,4 @@ framework:
 
             # Custom messages
             App\Message\SendWelcomeEmailMessage: async
+            App\Message\LogActivityMessage: async
