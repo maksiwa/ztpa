@@ -15,6 +15,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use OpenApi\Attributes as OA;
 
 /**
  * ============================================================
@@ -25,6 +26,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
  * Tutaj mamy tylko register (i ewentualnie refresh token)
  */
 #[Route('/api/auth')]
+#[OA\Tag(name: 'Authentication', description: 'User authentication and registration')]
 class AuthController extends AbstractController
 {
     public function __construct(
@@ -41,6 +43,26 @@ class AuthController extends AbstractController
      * Body: { "email": "...", "password": "...", "firstName": "...", "lastName": "..." }
      */
     #[Route('/register', name: 'api_auth_register', methods: ['POST'])]
+    #[OA\Post(
+        summary: 'Register a new user',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['email', 'password', 'firstName', 'lastName'],
+                properties: [
+                    new OA\Property(property: 'email', type: 'string', format: 'email'),
+                    new OA\Property(property: 'password', type: 'string', minLength: 6),
+                    new OA\Property(property: 'firstName', type: 'string'),
+                    new OA\Property(property: 'lastName', type: 'string'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 201, description: 'User created successfully'),
+            new OA\Response(response: 400, description: 'Invalid input'),
+            new OA\Response(response: 409, description: 'Email already exists'),
+        ]
+    )]
     public function register(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
@@ -102,6 +124,23 @@ class AuthController extends AbstractController
      * Ta metoda nigdy nie zostanie wywołana, ale jest potrzebna dla routingu
      */
     #[Route('/login', name: 'api_auth_login', methods: ['POST'])]
+    #[OA\Post(
+        summary: 'Login to get JWT token',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['email', 'password'],
+                properties: [
+                    new OA\Property(property: 'email', type: 'string', format: 'email'),
+                    new OA\Property(property: 'password', type: 'string'),
+                ]
+            )
+        ),
+        responses: [
+            new OA\Response(response: 200, description: 'JWT token returned'),
+            new OA\Response(response: 401, description: 'Invalid credentials'),
+        ]
+    )]
     public function login(): JsonResponse
     {
         // Obsługiwane przez Lexik JWT
@@ -112,6 +151,14 @@ class AuthController extends AbstractController
      * Pobierz dane zalogowanego użytkownika
      */
     #[Route('/me', name: 'api_auth_me', methods: ['GET'])]
+    #[OA\Get(
+        summary: 'Get current user profile',
+        security: [['Bearer' => []]],
+        responses: [
+            new OA\Response(response: 200, description: 'Current user data'),
+            new OA\Response(response: 401, description: 'Unauthorized'),
+        ]
+    )]
     public function me(): JsonResponse
     {
         /** @var User $user */

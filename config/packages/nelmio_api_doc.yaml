@@ -1,0 +1,32 @@
+nelmio_api_doc:
+    documentation:
+        info:
+            title: Cichy Challenge API
+            description: |
+                REST API dla aplikacji Cichy Challenge - platformy wspierającej cyfrowy detoks.
+                
+                ## Autoryzacja
+                API używa JWT (JSON Web Tokens). Aby uzyskać dostęp do chronionych endpointów:
+                1. Zarejestruj się przez POST /api/auth/register
+                2. Zaloguj się przez POST /api/auth/login
+                3. Dodaj nagłówek: `Authorization: Bearer <token>`
+            version: '1.0.0'
+        
+        servers:
+            - url: http://localhost:8080
+              description: Development server
+        
+        components:
+            securitySchemes:
+                Bearer:
+                    type: http
+                    scheme: bearer
+                    bearerFormat: JWT
+        
+        security:
+            - Bearer: []
+    
+    areas:
+        default:
+            path_patterns:
+                - ^/api(?!/doc$)
