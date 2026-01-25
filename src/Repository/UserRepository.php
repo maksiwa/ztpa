@@ -153,4 +153,58 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         
         return $conn->executeQuery($sql)->fetchAssociative();
     }
+
+    /**
+     * Pobierz TOP N użytkowników po punktach (dla leaderboard)
+     * 
+     * @return User[]
+     */
+    public function findTopByPoints(int $limit = 10): array
+    {
+        // Pobieramy użytkowników z ich wyzwaniami (eager loading)
+        $users = $this->createQueryBuilder('u')
+            ->leftJoin('u.userChallenges', 'uc')
+            ->leftJoin('uc.challenge', 'c')
+            ->where('u.isActive = true')
+            ->groupBy('u.id')
+            ->orderBy('SUM(CASE WHEN uc.status = :completed THEN c.points ELSE 0 END)', 'DESC')
+            ->addOrderBy('u.currentStreak', 'DESC')
+            ->setParameter('completed', 'completed')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+        
+        return $users;
+    }
+
+    /**
+     * Oblicz pozycję użytkownika w rankingu
+     */
+    public function getUserRank(User $user): int
+    {
+        $conn = $this->getEntityManager()->getConnection();
+        
+        $sql = '
+            WITH user_points AS (
+                SELECT 
+                    u.id,
+                    COALESCE(SUM(CASE WHEN uc.status = \'completed\' THEN c.points ELSE 0 END), 0) as total_points
+                FROM users u
+                LEFT JOIN user_challenges uc ON u.id = uc.user_id
+                LEFT JOIN challenges c ON uc.challenge_id = c.id
+                WHERE u.is_active = true
+                GROUP BY u.id
+            ),
+            ranked AS (
+                SELECT id, RANK() OVER (ORDER BY total_points DESC) as rank
+                FROM user_points
+            )
+            SELECT rank FROM ranked WHERE id = :userId
+        ';
+        
+        $result = $conn->executeQuery($sql, ['userId' => $user->getId()])->fetchOne();
+        
+        return (int) ($result ?: 0);
+    }
 }
+

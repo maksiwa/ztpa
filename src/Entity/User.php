@@ -117,6 +117,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $updatedAt = null;
 
+    /**
+     * Aktualna seria dni aktywności
+     */
+    #[ORM\Column(type: 'integer', options: ['default' => 0])]
+    private int $currentStreak = 0;
+
+    /**
+     * Najdłuższa seria dni (rekord)
+     */
+    #[ORM\Column(type: 'integer', options: ['default' => 0])]
+    private int $maxStreak = 0;
+
+    /**
+     * Data ostatniej aktywności (do obliczania streak)
+     */
+    #[ORM\Column(type: Types::DATE_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $lastActivityDate = null;
+
     // ─────────────────────────────────────────────
     // RELACJE (Powiązania z innymi encjami)
     // ─────────────────────────────────────────────
@@ -365,5 +383,69 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             }
         }
         return $points;
+    }
+
+    // ─────────────────────────────────────────────
+    // STREAK METHODS
+    // ─────────────────────────────────────────────
+
+    public function getCurrentStreak(): int
+    {
+        return $this->currentStreak;
+    }
+
+    public function getMaxStreak(): int
+    {
+        return $this->maxStreak;
+    }
+
+    public function getLastActivityDate(): ?\DateTimeImmutable
+    {
+        return $this->lastActivityDate;
+    }
+
+    /**
+     * Aktualizuje streak na podstawie aktywności
+     * Wywołaj przy każdej aktywności użytkownika
+     */
+    public function updateStreak(): void
+    {
+        $today = new \DateTimeImmutable('today');
+        
+        if ($this->lastActivityDate === null) {
+            // Pierwsze logowanie
+            $this->currentStreak = 1;
+            $this->maxStreak = 1;
+            $this->lastActivityDate = $today;
+            return;
+        }
+        
+        $lastActivity = $this->lastActivityDate;
+        $daysDiff = (int) $today->diff($lastActivity)->days;
+        
+        if ($daysDiff === 0) {
+            // Już dzisiaj był aktywny - nic nie rób
+            return;
+        } elseif ($daysDiff === 1) {
+            // Kontynuacja streak!
+            $this->currentStreak++;
+            if ($this->currentStreak > $this->maxStreak) {
+                $this->maxStreak = $this->currentStreak;
+            }
+        } else {
+            // Przerwany streak - reset
+            $this->currentStreak = 1;
+        }
+        
+        $this->lastActivityDate = $today;
+    }
+
+    /**
+     * Resetuje streak (np. przy opuszczeniu wyzwania)
+     */
+    public function resetStreak(): void
+    {
+        $this->currentStreak = 0;
+        $this->lastActivityDate = null;
     }
 }
