@@ -99,12 +99,34 @@ class ChallengeController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
         
-        // Sprawdź czy już uczestniczy
+        // Sprawdź czy już aktywnie uczestniczy (status = in_progress)
         if ($this->userChallengeRepository->isUserParticipating($user, $id)) {
             return $this->json(['error' => 'Already participating in this challenge'], Response::HTTP_CONFLICT);
         }
         
-        // Dołącz do wyzwania
+        // Sprawdź czy istnieje poprzedni rekord (completed/failed) - jeśli tak, reaktywuj
+        $existingUserChallenge = $this->userChallengeRepository->findOneBy([
+            'user' => $user,
+            'challenge' => $challenge,
+        ]);
+        
+        if ($existingUserChallenge !== null) {
+            // Reaktywuj istniejący rekord
+            $existingUserChallenge->setStatus('in_progress');
+            $existingUserChallenge->setProgress(0);
+            $existingUserChallenge->setStartDate(new \DateTimeImmutable());
+            $existingUserChallenge->setChallenge($challenge); // Przelicza endDate
+            
+            $this->userChallengeRepository->save($existingUserChallenge, true);
+            
+            return $this->json([
+                'message' => 'Successfully rejoined the challenge',
+                'challenge' => $challenge->getTitle(),
+                'endsAt' => $existingUserChallenge->getEndDate()?->format('c'),
+            ], Response::HTTP_CREATED);
+        }
+        
+        // Dołącz do wyzwania (nowy rekord)
         $userChallenge = new UserChallenge();
         $userChallenge->setUser($user);
         $userChallenge->setChallenge($challenge);
