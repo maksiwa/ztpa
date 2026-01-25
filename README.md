@@ -109,7 +109,99 @@ cichy-challenge/
 └── docker-compose.yml      # Orkiestracja kontenerów
 ```
 
-## 🔌 API Endpoints
+## �️ Diagram ERD (Entity Relationship Diagram)
+
+```mermaid
+erDiagram
+    USERS {
+        int id PK
+        varchar email UK
+        json roles
+        varchar password
+        varchar first_name
+        varchar last_name
+        boolean is_active
+        int current_streak
+        int max_streak
+        date last_activity_date
+        datetime created_at
+        datetime updated_at
+    }
+    
+    CHALLENGES {
+        int id PK
+        varchar title
+        text description
+        int duration_days
+        varchar difficulty_level
+        int points
+        datetime created_at
+    }
+    
+    USER_CHALLENGES {
+        int id PK
+        int user_id FK
+        int challenge_id FK
+        datetime start_date
+        datetime end_date
+        varchar status
+        int progress
+        datetime created_at
+    }
+    
+    ACHIEVEMENTS {
+        int id PK
+        varchar name
+        text description
+        varchar icon
+        int points_required
+        datetime created_at
+    }
+    
+    USER_ACHIEVEMENTS {
+        int id PK
+        int user_id FK
+        int achievement_id FK
+        datetime earned_at
+        datetime created_at
+    }
+    
+    ACTIVITY_LOGS {
+        int id PK
+        int user_id FK
+        varchar action
+        json details
+        varchar ip_address
+        varchar user_agent
+        datetime created_at
+    }
+    
+    QUOTES {
+        int id PK
+        text content
+        varchar author
+        varchar category
+        datetime created_at
+    }
+
+    USERS ||--o{ USER_CHALLENGES : "participates in"
+    CHALLENGES ||--o{ USER_CHALLENGES : "has participants"
+    USERS ||--o{ USER_ACHIEVEMENTS : "earns"
+    ACHIEVEMENTS ||--o{ USER_ACHIEVEMENTS : "awarded to"
+    USERS ||--o{ ACTIVITY_LOGS : "generates"
+```
+
+### Opis relacji:
+
+| Relacja | Typ | Opis |
+|---------|-----|------|
+| Users → User_Challenges | 1:N | Użytkownik może uczestniczyć w wielu wyzwaniach |
+| Challenges → User_Challenges | 1:N | Wyzwanie może mieć wielu uczestników |
+| Users → User_Achievements | 1:N | Użytkownik może zdobyć wiele osiągnięć |
+| Achievements → User_Achievements | 1:N | Osiągnięcie może być zdobyte przez wielu użytkowników |
+| Users → Activity_Logs | 1:N | Użytkownik generuje wiele logów aktywności |
+
+## �🔌 API Endpoints
 
 ### Autoryzacja
 - `POST /api/auth/register` - Rejestracja
