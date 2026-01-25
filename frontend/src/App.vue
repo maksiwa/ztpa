@@ -6,6 +6,7 @@
         <div class="nav-links">
           <router-link to="/challenges">Wyzwania</router-link>
           <router-link to="/progress">Postępy</router-link>
+          <router-link to="/leaderboard">🏆 Ranking</router-link>
           <router-link v-if="authStore.isAdmin" to="/admin" class="admin-link">👑 Admin</router-link>
           <button @click="logout" class="btn-logout">Wyloguj</button>
         </div>
