@@ -29,6 +29,12 @@ const routes = [
     name: 'Progress',
     component: () => import('../views/ProgressView.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: () => import('../views/AdminView.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
   }
 ]
 
@@ -38,11 +44,13 @@ const router = createRouter({
 })
 
 // Navigation guard for authentication
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   const authStore = useAuthStore()
   
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next('/login')
+  } else if (to.meta.requiresAdmin && !authStore.isAdmin) {
+    next('/challenges')
   } else if (to.meta.guest && authStore.isAuthenticated) {
     next('/challenges')
   } else {

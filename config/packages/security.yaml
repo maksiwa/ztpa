@@ -42,9 +42,9 @@ security:
     # Kontrola dostępu
     access_control:
         # Publiczne endpointy
+        - { path: ^/api/doc, roles: PUBLIC_ACCESS }
         - { path: ^/api/auth/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/auth/register, roles: PUBLIC_ACCESS }
-        - { path: ^/api/docs, roles: PUBLIC_ACCESS }
         
         # Admin only
         - { path: ^/api/admin, roles: ROLE_ADMIN }

@@ -6,6 +6,7 @@
         <div class="nav-links">
           <router-link to="/challenges">Wyzwania</router-link>
           <router-link to="/progress">Postępy</router-link>
+          <router-link v-if="authStore.isAdmin" to="/admin" class="admin-link">👑 Admin</router-link>
           <button @click="logout" class="btn-logout">Wyloguj</button>
         </div>
       </div>
@@ -82,6 +83,16 @@ const logout = () => {
 
 .btn-logout:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+.admin-link {
+  background: rgba(255, 215, 0, 0.3);
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+}
+
+.admin-link:hover {
+  background: rgba(255, 215, 0, 0.5);
 }
 
 .main-content {
